@@ -488,10 +488,16 @@ FCRET TextCompare(FILECOMPARE *pFC, HANDLE *phMapping0, const LARGE_INTEGER *pcb
     {
         ret0 = ParseLines(pFC, phMapping0, &ib0, pcb0, list0);
         if (ret0 == FCRET_INVALID)
-            return ret0;
+        {
+            ret = ret0;
+            goto cleanup;
+        }
         ret1 = ParseLines(pFC, phMapping1, &ib1, pcb1, list1);
         if (ret1 == FCRET_INVALID)
-            return ret1;
+        {
+            ret = ret1;
+            goto cleanup;
+        }
 
         for (;;)
         {
