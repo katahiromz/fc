@@ -327,7 +327,7 @@ ParseLines(const FILECOMPARE *pFC, HANDLE *phMapping,
 }
 
 static VOID
-ShowDiff(FILECOMPARE *pFC, INT i, struct list *first, struct list *last, BOOL fLast)
+ShowDiff(FILECOMPARE *pFC, INT i, struct list *first, struct list *last)
 {
     NODE* node;
     struct list *list = &pFC->list[i];
@@ -382,12 +382,10 @@ Resync(FILECOMPARE *pFC, struct list **pptr0, struct list **pptr1)
     ptr0 = *pptr0;
     for (i0 = 0; i0 < pFC->n; ++i0)
     {
-        if (i1 >= min_penalty)
-            break;
         ptr1 = *pptr1;
         for (i1 = 0; i1 < pFC->n; ++i1)
         {
-            penalty = i0 + i1;
+            penalty = i0 + i1 + 3 * abs(i1 - i0);
             if (penalty >= min_penalty)
                 continue;
 
@@ -438,8 +436,8 @@ Finalize(FILECOMPARE* pFC, struct list *ptr0, struct list* ptr1, BOOL fDifferent
         node1 = LIST_ENTRY(ptr1, NODE, entry);
         if (!IsEOFNode(node0) || !IsEOFNode(node1))
         {
-            ShowDiff(pFC, 0, ptr0, NULL, TRUE);
-            ShowDiff(pFC, 1, ptr1, NULL, TRUE);
+            ShowDiff(pFC, 0, ptr0, NULL);
+            ShowDiff(pFC, 1, ptr1, NULL);
             PrintEndOfDiff();
         }
         return FCRET_DIFFERENT;
@@ -465,7 +463,6 @@ FCRET TextCompare(FILECOMPARE *pFC, HANDLE *phMapping0, const LARGE_INTEGER *pcb
 {
     FCRET ret, ret0, ret1;
     struct list *list0, *list1, *ptr0, *ptr1, *save0, *save1, *next0, *next1;
-    NODE *node0, *node1;
     BOOL fDifferent = FALSE;
     LARGE_INTEGER ib0 = { .QuadPart = 0 }, ib1 = { .QuadPart = 0 };
     list0 = &pFC->list[0];
@@ -515,10 +512,8 @@ FCRET TextCompare(FILECOMPARE *pFC, HANDLE *phMapping0, const LARGE_INTEGER *pcb
         next1 = list_next(list1, ptr1);
         ptr0 = (next0 ? next0 : ptr0);
         ptr1 = (next1 ? next1 : ptr1);
-        node0 = LIST_ENTRY(ptr0, NODE, entry);
-        node1 = LIST_ENTRY(ptr1, NODE, entry);
-        ShowDiff(pFC, 0, save0, ptr0, IsEOFNode(node0));
-        ShowDiff(pFC, 1, save1, ptr1, IsEOFNode(node1));
+        ShowDiff(pFC, 0, save0, ptr0);
+        ShowDiff(pFC, 1, save1, ptr1);
         PrintEndOfDiff();
 
         DeleteNodes(list0, list_head(list0), ptr0);
