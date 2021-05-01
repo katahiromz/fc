@@ -385,10 +385,6 @@ Resync(FILECOMPARE *pFC, struct list **pptr0, struct list **pptr1)
         ptr1 = *pptr1;
         for (i1 = 0; i1 < pFC->n; ++i1)
         {
-            penalty = i0 + i1 + 3 * abs(i1 - i0);
-            if (penalty >= min_penalty)
-                continue;
-
             node0 = LIST_ENTRY(ptr0, NODE, entry);
             node1 = LIST_ENTRY(ptr1, NODE, entry);
             ret = CompareNode(pFC, node0, node1);
@@ -396,9 +392,13 @@ Resync(FILECOMPARE *pFC, struct list **pptr0, struct list **pptr1)
                 return ret;
             if (ret == FCRET_IDENTICAL)
             {
-                min_penalty = penalty;
-                save0 = ptr0;
-                save1 = ptr1;
+                penalty = i0 + 2 * i1 + 3 * abs(i1 - i0);
+                if (penalty < min_penalty)
+                {
+                    min_penalty = penalty;
+                    save0 = ptr0;
+                    save1 = ptr1;
+                }
             }
 
             ptr1 = list_next(list1, ptr1);
@@ -416,6 +416,21 @@ Resync(FILECOMPARE *pFC, struct list **pptr0, struct list **pptr1)
         *pptr1 = save1;
         return FCRET_IDENTICAL;
     }
+
+    ptr0 = *pptr0;
+    for (i0 = 0; i0 < pFC->n; ++i0)
+    {
+        ptr0 = list_next(list0, ptr0);
+    }
+    *pptr0 = ptr0;
+
+    ptr1 = *pptr1;
+    for (i1 = 0; i1 < pFC->n; ++i1)
+    {
+        ptr1 = list_next(list1, ptr1);
+    }
+    *pptr1 = ptr1;
+
     return FCRET_DIFFERENT;
 }
 
@@ -503,6 +518,9 @@ FCRET TextCompare(FILECOMPARE *pFC, HANDLE *phMapping0, const LARGE_INTEGER *pcb
         {
             // resync failed
             ret = ResyncFailed();
+            ShowDiff(pFC, 0, save0, ptr0);
+            ShowDiff(pFC, 1, save1, ptr1);
+            PrintEndOfDiff();
             goto cleanup;
         }
 
