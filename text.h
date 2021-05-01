@@ -441,9 +441,8 @@ Finalize(FILECOMPARE* pFC, struct list *ptr0, struct list* ptr1, BOOL fDifferent
     if (!ptr0 || !ptr1)
     {
         if (fDifferent)
-            return Different(pFC->file[0], pFC->file[1]);
-        else
-            return NoDifference();
+            return FCRET_DIFFERENT;
+        return NoDifference();
     }
     else
     {
@@ -485,63 +484,64 @@ FCRET TextCompare(FILECOMPARE *pFC, HANDLE *phMapping0, const LARGE_INTEGER *pcb
     list_init(list0);
     list_init(list1);
 
-    ret0 = ParseLines(pFC, phMapping0, &ib0, pcb0, list0);
-    if (ret0 == FCRET_INVALID)
-        return ret0;
-    ret1 = ParseLines(pFC, phMapping1, &ib1, pcb1, list1);
-    if (ret1 == FCRET_INVALID)
-        return ret1;
-
-    for (;;)
+    do
     {
-        ptr0 = list_head(list0);
-        ptr1 = list_head(list1);
-        if (!ptr0 || !ptr1)
-            goto quit;
+        ret0 = ParseLines(pFC, phMapping0, &ib0, pcb0, list0);
+        if (ret0 == FCRET_INVALID)
+            return ret0;
+        ret1 = ParseLines(pFC, phMapping1, &ib1, pcb1, list1);
+        if (ret1 == FCRET_INVALID)
+            return ret1;
 
-        // skip identical (sync'ed)
-        ret = SkipIdentical(pFC, &ptr0, &ptr1);
-        if (ret == FCRET_INVALID)
-            goto cleanup;
-        if (ret == FCRET_DIFFERENT)
-            fDifferent = TRUE;
-        if (!ptr0 || !ptr1)
-            goto quit;
-
-        // try to resync
-        save0 = ptr0;
-        save1 = ptr1;
-        ret = Resync(pFC, &ptr0, &ptr1);
-        if (ret == FCRET_INVALID)
-            goto cleanup;
-        if (ret == FCRET_DIFFERENT)
+        for (;;)
         {
-            // resync failed
-            ret = ResyncFailed();
+            ptr0 = list_head(list0);
+            ptr1 = list_head(list1);
+            if (!ptr0 || !ptr1)
+                goto quit;
+
+            // skip identical (sync'ed)
+            ret = SkipIdentical(pFC, &ptr0, &ptr1);
+            if (ret == FCRET_INVALID)
+                goto cleanup;
+            if (ret == FCRET_DIFFERENT)
+                fDifferent = TRUE;
+            if (!ptr0 || !ptr1)
+                goto quit;
+
+            // try to resync
+            save0 = ptr0;
+            save1 = ptr1;
+            ret = Resync(pFC, &ptr0, &ptr1);
+            if (ret == FCRET_INVALID)
+                goto cleanup;
+            if (ret == FCRET_DIFFERENT)
+            {
+                // resync failed
+                ret = ResyncFailed();
+                ShowDiff(pFC, 0, save0, ptr0);
+                ShowDiff(pFC, 1, save1, ptr1);
+                PrintEndOfDiff();
+                goto cleanup;
+            }
+
+            // now, show the difference (with clean-up)
+            fDifferent = TRUE;
+            next0 = list_next(list0, ptr0);
+            next1 = list_next(list1, ptr1);
+            ptr0 = (next0 ? next0 : ptr0);
+            ptr1 = (next1 ? next1 : ptr1);
             ShowDiff(pFC, 0, save0, ptr0);
             ShowDiff(pFC, 1, save1, ptr1);
             PrintEndOfDiff();
-            goto cleanup;
+
+            DeleteNodes(list0, list_head(list0), ptr0);
+            DeleteNodes(list1, list_head(list1), ptr1);
+            // now resync'ed
         }
-
-        // now, show the difference (with clean-up)
-        fDifferent = TRUE;
-        next0 = list_next(list0, ptr0);
-        next1 = list_next(list1, ptr1);
-        ptr0 = (next0 ? next0 : ptr0);
-        ptr1 = (next1 ? next1 : ptr1);
-        ShowDiff(pFC, 0, save0, ptr0);
-        ShowDiff(pFC, 1, save1, ptr1);
-        PrintEndOfDiff();
-
-        DeleteNodes(list0, list_head(list0), ptr0);
-        DeleteNodes(list1, list_head(list1), ptr1);
-
-        // now resync'ed
-    }
+    } while (ret0 != FCRET_NO_MORE_DATA || ret1 != FCRET_NO_MORE_DATA);
 
 quit:
-    // finalizing...
     ret = Finalize(pFC, ptr0, ptr1, fDifferent);
 cleanup:
     DeleteList(list0);
