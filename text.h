@@ -476,11 +476,10 @@ FCRET TextCompare(FILECOMPARE *pFC, HANDLE *phMapping0, const LARGE_INTEGER *pcb
                                     HANDLE *phMapping1, const LARGE_INTEGER *pcb1)
 {
     FCRET ret, ret0, ret1;
-    struct list *list0, *list1, *ptr0, *ptr1, *save0, *save1, *next0, *next1;
+    struct list *ptr0, *ptr1, *save0, *save1, *next0, *next1;
     BOOL fDifferent = FALSE;
     LARGE_INTEGER ib0 = { .QuadPart = 0 }, ib1 = { .QuadPart = 0 };
-    list0 = &pFC->list[0];
-    list1 = &pFC->list[1];
+    struct list *list0 = &pFC->list[0], *list1 = &pFC->list[1];
     list_init(list0);
     list_init(list1);
 
