@@ -413,8 +413,6 @@ Resync(FILECOMPARE *pFC, struct list **pptr0, struct list **pptr1)
             node0 = LIST_ENTRY(ptr0, NODE, entry);
             node1 = LIST_ENTRY(ptr1, NODE, entry);
             ret = CompareNode(pFC, node0, node1);
-            if (ret == FCRET_INVALID)
-                return ret;
             if (ret == FCRET_IDENTICAL)
             {
                 penalty = i0 + 2 * i1 + 3 * abs(i1 - i0);
