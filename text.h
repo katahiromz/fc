@@ -460,7 +460,6 @@ Resync(FILECOMPARE *pFC, struct list **pptr0, struct list **pptr1)
 static FCRET 
 Finalize(FILECOMPARE* pFC, struct list *ptr0, struct list* ptr1, BOOL fDifferent)
 {
-    NODE* node0, * node1;
     if (!ptr0 || !ptr1)
     {
         if (fDifferent)
@@ -469,14 +468,9 @@ Finalize(FILECOMPARE* pFC, struct list *ptr0, struct list* ptr1, BOOL fDifferent
     }
     else
     {
-        node0 = LIST_ENTRY(ptr0, NODE, entry);
-        node1 = LIST_ENTRY(ptr1, NODE, entry);
-        if (!IsEOFNode(node0) || !IsEOFNode(node1))
-        {
-            ShowDiff(pFC, 0, ptr0, NULL);
-            ShowDiff(pFC, 1, ptr1, NULL);
-            PrintEndOfDiff();
-        }
+        ShowDiff(pFC, 0, ptr0, NULL);
+        ShowDiff(pFC, 1, ptr1, NULL);
+        PrintEndOfDiff();
         return FCRET_DIFFERENT;
     }
 }
