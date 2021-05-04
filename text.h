@@ -481,9 +481,13 @@ Resync(FILECOMPARE *pFC, struct list **pptr0, struct list **pptr1)
                 break;
             if (CompareNode(pFC, node0, node1) == FCRET_IDENTICAL)
             {
-                save0 = ptr0;
-                save1 = ptr1;
-                goto quit;
+                penalty = min(i0, i1) + abs(i1 - i0);
+                if (min_penalty >= penalty)
+                {
+                    min_penalty = penalty;
+                    save0 = ptr0;
+                    save1 = ptr1;
+                }
             }
         }
     }
