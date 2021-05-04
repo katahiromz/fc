@@ -373,7 +373,6 @@ static VOID
 SkipIdentical(FILECOMPARE *pFC, struct list **pptr0, struct list **pptr1)
 {
     struct list *ptr0 = *pptr0, *ptr1 = *pptr1;
-    FCRET ret;
     while (ptr0 && ptr1)
     {
         NODE *node0 = LIST_ENTRY(ptr0, NODE, entry);
@@ -392,7 +391,6 @@ SkipIdenticalN(FILECOMPARE *pFC, struct list **pptr0, struct list **pptr1,
                DWORD nnnn, DWORD lineno0, DWORD lineno1)
 {
     struct list *ptr0 = *pptr0, *ptr1 = *pptr1;
-    FCRET ret;
     DWORD count = 0;
     while (ptr0 && ptr1)
     {
@@ -421,7 +419,7 @@ ScanDiff(FILECOMPARE *pFC, struct list **pptr0, struct list **pptr1,
 {
     struct list *ptr0 = *pptr0, *ptr1 = *pptr1, *tmp0, *tmp1;
     NODE *node0, *node1;
-    DWORD count;
+    INT count;
     while (ptr0 && ptr1)
     {
         node0 = LIST_ENTRY(ptr0, NODE, entry);
@@ -458,7 +456,8 @@ Resync(FILECOMPARE *pFC, struct list **pptr0, struct list **pptr1)
     struct list *ptr0, *ptr1, *save0 = NULL, *save1 = NULL;
     NODE *node0, *node1;
     struct list *list0 = &pFC->list[0], *list1 = &pFC->list[1];
-    INT lineno0, lineno1, penalty, i0, i1, min_penalty = MAXLONG;
+    DWORD lineno0, lineno1;
+    INT penalty, i0, i1, min_penalty = MAXLONG;
 
     node0 = LIST_ENTRY(*pptr0, NODE, entry);
     node1 = LIST_ENTRY(*pptr1, NODE, entry);
@@ -492,7 +491,6 @@ Resync(FILECOMPARE *pFC, struct list **pptr0, struct list **pptr1)
         }
     }
 
-quit:
     if (save0 && save1)
     {
         *pptr0 = save0;
@@ -595,7 +593,7 @@ FCRET TextCompare(FILECOMPARE *pFC, HANDLE *phMapping0, const LARGE_INTEGER *pcb
                 fDifferent = TRUE;
             node0 = LIST_ENTRY(ptr0, NODE, entry);
             node1 = LIST_ENTRY(ptr1, NODE, entry);
-            if (IsEOFNode(ptr0) || IsEOFNode(ptr1))
+            if (IsEOFNode(node0) || IsEOFNode(node1))
                 goto quit;
 
             // try to resync
