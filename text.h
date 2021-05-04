@@ -482,7 +482,7 @@ Resync(FILECOMPARE *pFC, struct list **pptr0, struct list **pptr1)
             if (CompareNode(pFC, node0, node1) == FCRET_IDENTICAL)
             {
                 penalty = min(i0, i1) + abs(i1 - i0);
-                if (min_penalty >= penalty)
+                if (min_penalty > penalty)
                 {
                     min_penalty = penalty;
                     save0 = ptr0;
@@ -495,11 +495,14 @@ Resync(FILECOMPARE *pFC, struct list **pptr0, struct list **pptr1)
 quit:
     if (save0 && save1)
     {
-        node0 = LIST_ENTRY(save0, NODE, entry);
-        node1 = LIST_ENTRY(save1, NODE, entry);
-        ret = ScanDiff(pFC, &save0, &save1, lineno0, lineno1);
         *pptr0 = save0;
         *pptr1 = save1;
+        ret = ScanDiff(pFC, &save0, &save1, lineno0, lineno1);
+        if (save0 && save1)
+        {
+            *pptr0 = save0;
+            *pptr1 = save1;
+        }
         return ret;
     }
 
@@ -557,6 +560,7 @@ FCRET TextCompare(FILECOMPARE *pFC, HANDLE *phMapping0, const LARGE_INTEGER *pcb
 {
     FCRET ret, ret0, ret1;
     struct list *ptr0, *ptr1, *save0, *save1, *next0, *next1;
+    NODE* node0, * node1;
     BOOL fDifferent = FALSE;
     LARGE_INTEGER ib0 = { .QuadPart = 0 }, ib1 = { .QuadPart = 0 };
     struct list *list0 = &pFC->list[0], *list1 = &pFC->list[1];
@@ -589,7 +593,9 @@ FCRET TextCompare(FILECOMPARE *pFC, HANDLE *phMapping0, const LARGE_INTEGER *pcb
             SkipIdentical(pFC, &ptr0, &ptr1);
             if (ptr0 || ptr1)
                 fDifferent = TRUE;
-            if (!ptr0 || !ptr1)
+            node0 = LIST_ENTRY(ptr0, NODE, entry);
+            node1 = LIST_ENTRY(ptr1, NODE, entry);
+            if (IsEOFNode(ptr0) || IsEOFNode(ptr1))
                 goto quit;
 
             // try to resync
