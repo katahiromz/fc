@@ -539,20 +539,6 @@ Finalize(FILECOMPARE* pFC, struct list *ptr0, struct list* ptr1, BOOL fDifferent
     }
 }
 
-static VOID DeleteNodes(struct list* list, struct list* first, struct list* last)
-{
-    struct list* next;
-    NODE* node;
-    while (first != last)
-    {
-        next = list_next(list, first);
-        node = LIST_ENTRY(first, NODE, entry);
-        list_remove(first);
-        DeleteNode(node);
-        first = next;
-    }
-}
-
 FCRET TextCompare(FILECOMPARE *pFC, HANDLE *phMapping0, const LARGE_INTEGER *pcb0,
                                     HANDLE *phMapping1, const LARGE_INTEGER *pcb1)
 {
