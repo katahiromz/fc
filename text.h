@@ -333,7 +333,7 @@ ShowDiff(FILECOMPARE *pFC, INT i, struct list *begin, struct list *end)
     struct list *list = &pFC->list[i];
     struct list *first = NULL, *last = NULL;
     PrintCaption(pFC->file[i]);
-    if (begin && list_prev(list, begin))
+    if (begin && end && list_prev(list, begin))
         begin = list_prev(list, begin);
     while (begin != end)
     {
@@ -582,10 +582,10 @@ FCRET TextCompare(FILECOMPARE *pFC, HANDLE *phMapping0, const LARGE_INTEGER *pcb
             goto cleanup;
         }
 
+        ptr0 = list_head(list0);
+        ptr1 = list_head(list1);
         for (;;)
         {
-            ptr0 = list_head(list0);
-            ptr1 = list_head(list1);
             if (!ptr0 || !ptr1)
                 goto quit;
 
@@ -618,14 +618,10 @@ FCRET TextCompare(FILECOMPARE *pFC, HANDLE *phMapping0, const LARGE_INTEGER *pcb
             fDifferent = TRUE;
             next0 = ptr0 ? list_next(list0, ptr0) : ptr0;
             next1 = ptr1 ? list_next(list1, ptr1) : ptr1;
-            ptr0 = (next0 ? next0 : ptr0);
-            ptr1 = (next1 ? next1 : ptr1);
-            ShowDiff(pFC, 0, save0, ptr0);
-            ShowDiff(pFC, 1, save1, ptr1);
+            ShowDiff(pFC, 0, save0, (next0 ? next0 : ptr0));
+            ShowDiff(pFC, 1, save1, (next1 ? next1 : ptr1));
             PrintEndOfDiff();
 
-            DeleteNodes(list0, list_head(list0), ptr0);
-            DeleteNodes(list1, list_head(list1), ptr1);
             // now resync'ed
         }
     } while (ret0 != FCRET_NO_MORE_DATA || ret1 != FCRET_NO_MORE_DATA);
